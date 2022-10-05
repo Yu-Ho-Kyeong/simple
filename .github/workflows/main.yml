@@ -38,6 +38,39 @@ jobs:
       - name: Build with Maven
         run: mvn -f simple/pom.xml --batch-mode --update-snapshots package
         
+     
+         
+      # 이름 중복방지 현재시간생성
+      - name: Get current time
+        uses: 1466587594/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYYMMDDTHHmm
+          utcOffset: "+09:00"
+          
+      # deploy 디렉토리 만들고 .jar 복사 및 압축
+      - name: Generate deployment package
+        run: |
+          mkdir -p deploy
+          cp simple/target/*.jar deploy
+          cp Procfile deploy/Procfile
+          cp -r .ebextensions deploy/.ebextensions
+          cd deploy && zip -r simple-label-${{steps.current-time.outputs.formattedTime}}-${{github.sha}} .
+          
+      # Elastic Beanstalk 연결
+      - name: Deploy Consumer to EB
+        uses: einaregilsson/beanstalk-deploy@v14
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: simpleapp-env
+          environment_name: Simpleappenv-env
+          version_label: simple-label-${{steps.current-time.outputs.formattedTime}}-${{github.sha}}
+          region: ap-northeast-2
+          deployment_package: deploy/simple-label-${{steps.current-time.outputs.formattedTime}}-${{github.sha}}.zip
+          
+      
+        
         
         
         
