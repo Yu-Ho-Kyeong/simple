@@ -36,7 +36,7 @@ jobs:
           java-version: '8'
           distribution: 'adopt'
       - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots package
+        run: mvn -f simple/pom.xml --batch-mode --update-snapshots package
         
         
         
